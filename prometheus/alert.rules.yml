@@ -1,0 +1,42 @@
+# Alert rules for metrics workshop
+groups:
+  - name: workshop-alerts
+    rules:
+      # Alert when application is down
+      - alert: AppDown
+        expr: up{job="spring-app"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Application is down"
+          description: "The Spring Boot application has been down for more than 30 seconds."
+
+      # Alert when error rate exceeds 5%
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(workshop_requests_total{status=~"5.."}[1m])) 
+            / 
+            sum(rate(workshop_requests_total[1m]))
+          ) > 0.05
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for more than 1 minute. Current value: {{ $value | printf \"%.2f\" }}%"
+
+      # Alert when P95 latency exceeds 500ms
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_server_requests_seconds_bucket{uri!~"/actuator.*"}[1m])) by (le)
+          ) > 0.5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High P95 latency detected"
+          description: "P95 latency is above 500ms for more than 1 minute. Current value: {{ $value | printf \"%.3f\" }}s"
+
