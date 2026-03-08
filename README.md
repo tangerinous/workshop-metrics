@@ -10,12 +10,14 @@ docker compose up --build
 
 ## Services
 
-| Service      | URL                          | Description                    |
-|--------------|------------------------------|--------------------------------|
-| Spring App   | http://localhost:8080        | Sample application             |
-| Prometheus   | http://localhost:9090        | Metrics & alerting             |
-| Grafana      | http://localhost:3000        | Dashboards (admin/admin)       |
-| Alertmanager | http://localhost:9093        | Alert management               |
+| Service       | URL                          | Description                    |
+|---------------|------------------------------|--------------------------------|
+| Spring App    | http://localhost:8080        | Sample application             |
+| Prometheus    | http://localhost:9090        | Metrics & alerting             |
+| Grafana       | http://localhost:3000        | Dashboards (admin/admin)       |
+| Alertmanager  | http://localhost:9093        | Alert management               |
+| Elasticsearch | http://localhost:9200        | Log storage                    |
+| Kibana        | http://localhost:5601        | Log visualization              |
 
 ## Application Endpoints
 
@@ -81,6 +83,22 @@ curl -X POST http://localhost:8080/disable-modes
 - **AppDown** - Application is unreachable
 - **HighErrorRate** - Error rate > 5% for 1 minute
 - **HighLatencyP95** - P95 latency > 500ms for 1 minute
+
+## Elasticsearch Logs
+
+### View app logs
+```bash
+curl -s "http://localhost:9200/app-logs-*/_search?pretty&size=10"
+```
+
+### Search for errors
+```bash
+curl -s "http://localhost:9200/app-logs-*/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+  "query": { "match": { "message": "ERROR" } },
+  "size": 10
+}'
+```
 
 ## Stop Services
 
