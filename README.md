@@ -1,114 +1,114 @@
-# Metrics Workshop
+# 📊 Monitoring Workshop
 
-A complete Docker Compose setup for learning Prometheus monitoring with a Spring Boot application.
+Учебный стенд для изучения мониторинга приложений. Включает сбор метрик, визуализацию, алертинг и централизованное логирование.
 
-## Quick Start
+---
+
+## ✅ Требования
+
+- Docker и Docker Compose (или Docker Desktop)
+- Git
+- Свободные порты: `8080`, `9090`, `3000`, `9093`, `9200`, `5601`
+
+---
+
+## 🚀 Запуск
 
 ```bash
+git clone https://github.com/tangerinous/workshop-metrics.git
+cd metrics-workshop
 docker compose up --build
 ```
 
-## Services
+Дождитесь запуска всех контейнеров (1–2 минуты).
 
-| Service       | URL                          | Description                    |
-|---------------|------------------------------|--------------------------------|
-| Spring App    | http://localhost:8080        | Sample application             |
-| Prometheus    | http://localhost:9090        | Metrics & alerting             |
-| Grafana       | http://localhost:3000        | Dashboards (admin/admin)       |
-| Alertmanager  | http://localhost:9093        | Alert management               |
-| Elasticsearch | http://localhost:9200        | Log storage                    |
-| Kibana        | http://localhost:5601        | Log visualization              |
+---
 
-## Application Endpoints
+## 🔗 Сервисы
 
-| Endpoint           | Method | Description                              |
-|--------------------|--------|------------------------------------------|
-| `/fast`            | GET    | Returns immediately (200)                |
-| `/slow`            | GET    | Returns after 300-500ms delay (200)      |
-| `/error`           | GET    | Returns 500 randomly (~30%)              |
-| `/enable-slow`     | POST   | Enable global slow mode                  |
-| `/enable-errors`   | POST   | Enable global error mode (higher rate)   |
-| `/disable-modes`   | POST   | Disable all artificial modes             |
-| `/actuator/prometheus` | GET | Prometheus metrics endpoint          |
+| Сервис | URL | Описание |
+|--------|-----|----------|
+| Application | http://localhost:8080 | Spring Boot приложение |
+| Prometheus | http://localhost:9090 | Метрики и алерты |
+| Grafana | http://localhost:3000 | Дашборды (логин: `admin` / `admin`) |
+| Alertmanager | http://localhost:9093 | Управление алертами |
+| Kibana | http://localhost:5601 | Просмотр логов |
+| Elasticsearch | http://localhost:9200 | Хранение логов |
 
-## Custom Metrics
+---
 
-- `workshop_requests_total` - Counter with endpoint/status labels
-- `workshop_errors_total` - Counter for 5xx responses
-- `workshop_queue_size` - Gauge (simulated queue)
-- `workshop_active_requests` - Gauge (concurrent requests)
-- `workshop_request_duration_seconds` - Histogram (request latency)
-
-## Useful PromQL Queries
-
-### Request Rate
-```promql
-rate(workshop_requests_total[1m])
-```
-
-### Error Rate Percentage
-```promql
-sum(rate(workshop_requests_total{status=~"5.."}[1m])) / sum(rate(workshop_requests_total[1m])) * 100
-```
-
-### P95 Latency
-```promql
-histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[1m])) by (le))
-```
-
-### Active Requests
-```promql
-workshop_active_requests
-```
-
-## Simulating Incidents
-
-### Enable High Latency
-```bash
-curl -X POST http://localhost:8080/enable-slow
-```
-
-### Enable High Error Rate
-```bash
-curl -X POST http://localhost:8080/enable-errors
-```
-
-### Return to Normal
-```bash
-curl -X POST http://localhost:8080/disable-modes
-```
-
-## Alerts
-
-- **AppDown** - Application is unreachable
-- **HighErrorRate** - Error rate > 5% for 1 minute
-- **HighLatencyP95** - P95 latency > 500ms for 1 minute
-
-## Elasticsearch Logs
-
-### View app logs
-```bash
-curl -s "http://localhost:9200/app-logs-*/_search?pretty&size=10"
-```
-
-### Search for errors
-```bash
-curl -s "http://localhost:9200/app-logs-*/_search?pretty" -H 'Content-Type: application/json' -d'
-{
-  "query": { "match": { "message": "ERROR" } },
-  "size": 10
-}'
-```
-
-## Stop Services
+## 🛑 Остановка
 
 ```bash
 docker compose down
 ```
 
-## Clean Up (including volumes)
+Для удаления данных (volumes):
 
 ```bash
 docker compose down -v
 ```
+
+---
+
+## 🔥 Симуляция инцидентов
+
+### Включить режим ошибок (~50% запросов с ошибкой 500):
+
+```bash
+curl -X POST http://localhost:8080/enable-errors
+```
+
+### Включить режим замедления (все запросы медленные):
+
+```bash
+curl -X POST http://localhost:8080/enable-slow
+```
+
+### Отключить все режимы:
+
+```bash
+curl -X POST http://localhost:8080/disable-modes
+```
+
+### Остановить генератор нагрузки:
+
+```bash
+docker stop k6
+```
+
+### Запустить генератор нагрузки:
+
+```bash
+docker start k6
+```
+
+---
+
+## 📁 Структура проекта
+
+```
+metrics-workshop/
+├── app/                    # Spring Boot приложение
+├── prometheus/             # Конфигурация Prometheus и алерты
+├── grafana/                # Дашборды и datasources
+├── alertmanager/           # Конфигурация Alertmanager
+├── k6/                     # Скрипт нагрузочного тестирования
+├── filebeat/               # Сбор логов
+└── docker-compose.yml      # Конфигурация стека
+```
+
+---
+
+## 📌 Полезные эндпоинты приложения
+
+| Эндпоинт | Метод | Описание |
+|----------|-------|----------|
+| `/fast` | GET | Быстрый ответ |
+| `/slow` | GET | Ответ с задержкой 300–500ms |
+| `/error` | GET | ~30% ошибок (500) |
+| `/actuator/prometheus` | GET | Метрики Prometheus |
+| `/enable-errors` | POST | Включить режим ошибок |
+| `/enable-slow` | POST | Включить режим замедления |
+| `/disable-modes` | POST | Отключить все режимы |
 
