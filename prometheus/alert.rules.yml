@@ -16,8 +16,8 @@ groups:
       - alert: HighErrorRate
         expr: |
           (
-            sum(rate(workshop_requests_total{status=~"5.."}[1m])) 
-            / 
+            sum(rate(workshop_errors_total[1m]))
+            /
             sum(rate(workshop_requests_total[1m]))
           ) > 0.05
         for: 1m
@@ -25,7 +25,7 @@ groups:
           severity: warning
         annotations:
           summary: "High error rate detected"
-          description: "Error rate is above 5% for more than 1 minute. Current value: {{ $value | printf \"%.2f\" }}%"
+          description: "Error rate is above 5% for the last 1 minute. Current rate: {{ $value | humanizePercentage }}"
 
       # Alert when P95 latency exceeds 500ms
       - alert: HighLatencyP95
